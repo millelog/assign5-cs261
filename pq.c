@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "dynarray.h"
 #include "pq.h"
@@ -97,10 +98,13 @@ void pq_insert(struct pq* pq, void* item, int priority) {
   new_elem->item = item;
   new_elem->priority = priority;
 
-  /*
-   * Figure out where in the heap array to insert the new element represented
-   * by new_elem and insert it.
-   */
+
+
+   int insertion_index=1;
+   while(dynarray_get(pq->heap, insertion_index)){
+     insertion_index++;
+   }
+   dynarray_insert(pq->heap, insertion_index, new_elem);
 
   /*
    * Restore the heap so that it has the property that every node's priority
@@ -111,6 +115,25 @@ void pq_insert(struct pq* pq, void* item, int priority) {
    * elem->priority values).
    */
 
+    while(has_parent(pq, insertion_index)){
+      int parent = dynarray_get(pq->heap, insertion_index/2);
+      if(priority<parent->priority){
+        dynarray_set(pq->heap, insertion_index/2, new_elem);
+        dynarray_set(pq->heap, insertion_index, parent);
+        insertion_index=insertion_index/2;
+      }
+    }
+
+
+}
+
+int has_parent(struct pq* pq, int index){
+  if(index == 1){
+    return 0;
+  }
+  if(dynarray_get(pq->heap, index/2)){
+    return 1;
+  }
 }
 
 
@@ -131,6 +154,7 @@ void* pq_first(struct pq* pq) {
    * element (i.e. the one with the lowest priority value), and store the
    * value there in first_elem.
    */
+   first_elem = dynarray_get(pq->heap, 1);
 
   /*
    * Return the extracted item, if the element taken out of the priority
@@ -161,13 +185,14 @@ void* pq_remove_first(struct pq* pq) {
    * element (i.e. the one with the lowest priority value), and store the
    * value there in first_elem.
    */
-
+  first_elem = dynarray_get(pq->heap, 1);
   /*
    * Replace the highest-priority element with the appropriate one from within
    * the heap array.  Remove that replacement element from the array after
    * copying its value to the location of the old highest-priority element..
    */
-
+  dynarray_set(pq->heap, 1, dynarray_get(pq->heap, 2));
+  dynarray_remove(pq->heap, 2);
   /*
    * Restore the heap so that it has the property that every node's priority
    * value is less than the priority values of its children.  This can be

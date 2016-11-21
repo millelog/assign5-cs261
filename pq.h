@@ -40,7 +40,7 @@ int pq_isempty(struct pq* pq);
  *   be returned from the priority queue before an item with priority 5.
  */
 void pq_insert(struct pq* pq, void* item, int priority);
-
+int has_parent(struct pq* pq, int index);
 /*
  * Returns the first (i.e. highest-priority) item in a priority queue without
  * removing it from the queue.
