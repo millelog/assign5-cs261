@@ -186,7 +186,7 @@ void* pq_remove_first(struct pq* pq) {
    */
   first_elem = dynarray_get(pq->heap, 1);
   /*
-   * Replace the highest-priority element with the appropriate one from within
+   * Replace the hdfighest-priority element with the appropriate one from within
    * the heap array.  Remove that replacement element from the array after
    * copying its value to the location of the old highest-priority element..
    */
