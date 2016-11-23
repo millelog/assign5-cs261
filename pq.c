@@ -99,9 +99,8 @@ void pq_insert(struct pq* pq, void* item, int priority) {
   new_elem->priority = priority;
 
 
-
    int insertion_index=dynarray_size(pq->heap);
-   dynarray_insert(pq->heap, insertion_index, new_elem);
+   dynarray_insert(pq->heap, -1, new_elem);
 
   /*
    * Restore the heap so that it has the property that every node's priority
@@ -112,30 +111,35 @@ void pq_insert(struct pq* pq, void* item, int priority) {
    * elem->priority values).
    */
 
-    while(has_parent(pq, insertion_index)){
-      struct pq_elem* parent = dynarray_get(pq->heap, insertion_index/2);
-      if(priority<parent->priority){
-        dynarray_set(pq->heap, insertion_index/2, new_elem);
-        dynarray_set(pq->heap, insertion_index, parent);
-        insertion_index=insertion_index/2;
-      }
+    perc_up(pq, insertion_index);
+
+}
+
+void perc_up(struct pq* pq, int index){
+  if(dynarray_size(pq->heap)==1){
+    return;
+  }
+
+  struct pq_elem* current = dynarray_get(pq->heap, index);
+  if(dynarray_get(pq->heap, index/2) != NULL && index!=0){
+
+    struct pq_elem* parent = dynarray_get(pq->heap, index/2);
+
+    if(current->priority<parent->priority){
+      dynarray_set(pq->heap, index, parent);
+      dynarray_set(pq->heap, index/2, current);
+      perc_up(pq, index/2);
     }
-
-
+  }
+  return;
 }
 
-int has_parent(struct pq* pq, int index){
-  if(index == 0){
-    return 0;
+void print_heap(struct pq* pq){
+  for(int i=0; i<dynarray_size(pq->heap); i++){
+    struct pq_elem *current = dynarray_get(pq->heap, i);
+    printf("Index: %d priority: %d\n", i, current->priority);
   }
-  if(dynarray_get(pq->heap, index/2) != NULL){
-    printf("index: %d\n", index );
-    return 1;
-  }
-  return 0;
 }
-
-
 /*
  * This function returns the first (highest-priority) item from a priority
  * queue without removing it.
@@ -153,7 +157,7 @@ void* pq_first(struct pq* pq) {
    * element (i.e. the one with the lowest priority value), and store the
    * value there in first_elem.
    */
-   first_elem = dynarray_get(pq->heap, 1);
+   first_elem = dynarray_get(pq->heap, 0);
 
   /*
    * Return the extracted item, if the element taken out of the priority
@@ -177,6 +181,7 @@ void* pq_remove_first(struct pq* pq) {
   assert(pq);
   assert(dynarray_size(pq->heap) > 0);
 
+
   struct pq_elem* first_elem = NULL;
 
   /*
@@ -184,14 +189,22 @@ void* pq_remove_first(struct pq* pq) {
    * element (i.e. the one with the lowest priority value), and store the
    * value there in first_elem.
    */
-  first_elem = dynarray_get(pq->heap, 1);
+  first_elem = dynarray_get(pq->heap, 0);
+  if(dynarray_size(pq->heap)==1){
+    dynarray_remove(pq->heap, 0);
+    if (first_elem != NULL) {
+      return first_elem->item;
+    } else {
+      return NULL;
+    }
+  }
   /*
    * Replace the hdfighest-priority element with the appropriate one from within
    * the heap array.  Remove that replacement element from the array after
    * copying its value to the location of the old highest-priority element..
    */
-  dynarray_set(pq->heap, 1, dynarray_get(pq->heap, 2));
-  dynarray_remove(pq->heap, 2);
+  dynarray_set(pq->heap, 0, dynarray_get(pq->heap, 1));
+  dynarray_remove(pq->heap, 1);
   /*
    * Restore the heap so that it has the property that every node's priority
    * value is less than the priority values of its children.  This can be
@@ -201,8 +214,7 @@ void* pq_remove_first(struct pq* pq) {
    * array (i.e. by comparing the elem->priority values).  It may be helpful
    * to write a helper function to accomplish this percolation down.
    */
-
-   perc_down(pq, 1);
+  perc_down(pq, 0);
 
   /*
    * Return the extracted item, if the element taken out of the priority
@@ -217,26 +229,39 @@ void* pq_remove_first(struct pq* pq) {
 
 void perc_down(struct pq* pq, int index){
   struct pq_elem* current = dynarray_get(pq->heap, index);
+  int left_index, right_index;
+  if(index == 0){
+    left_index = 1;
+    right_index = 2;
+  }
+  else{
+    left_index = index*2;
+    right_index = index*2+1;
+  }
+  if(left_index < dynarray_size(pq->heap) && dynarray_get(pq->heap, left_index) != NULL){
+    struct pq_elem* left = NULL;
 
-  if(dynarray_get(pq->heap, 2*index) != NULL){
 
-    struct pq_elem* left = dynarray_get(pq->heap, 2*index);
+    left = dynarray_get(pq->heap, left_index);
 
     if(current->priority>left->priority){
       dynarray_set(pq->heap, index, left);
-      dynarray_set(pq->heap, index*2, current);
-      perc_down(pq, index*2);
+      dynarray_set(pq->heap, left_index, current);
     }
+    perc_down(pq, left_index);
   }
 
-  else if(dynarray_get(pq->heap, 2*index+1) != NULL){
-    struct pq_elem* right = dynarray_get(pq->heap, 2*index+1);
+  else if(right_index < dynarray_size(pq->heap) && dynarray_get(pq->heap, right_index) != NULL){
+    struct pq_elem* right = NULL;
+
+    right = dynarray_get(pq->heap, right_index);
+
 
     if(current->priority>right->priority){
       dynarray_set(pq->heap, index, right);
-      dynarray_set(pq->heap, index*2+1, current);
-      perc_down(pq, index*2+1);
+      dynarray_set(pq->heap, right_index, current);
     }
+    perc_down(pq, right_index);
   }
   return;
 }

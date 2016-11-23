@@ -21,7 +21,6 @@ int main(int argc, char** argv) {
     assert(*first == min_so_far);
     printf(" SUCCEEDED!\n");
   }
-
   for (int i = 0; i < 16; i++) {
     int* first = pq_first(pq);
     int* removed_first = pq_remove_first(pq);
