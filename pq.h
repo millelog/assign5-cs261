@@ -52,6 +52,7 @@ void* pq_first(struct pq* pq);
  * returns it.
  */
 void* pq_remove_first(struct pq* pq);
+void perc_down(struct pq* pq, int index);
 
 
 #endif

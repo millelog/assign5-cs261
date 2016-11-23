@@ -100,10 +100,7 @@ void pq_insert(struct pq* pq, void* item, int priority) {
 
 
 
-   int insertion_index=1;
-   while(dynarray_get(pq->heap, insertion_index)){
-     insertion_index++;
-   }
+   int insertion_index=dynarray_size(pq->heap);
    dynarray_insert(pq->heap, insertion_index, new_elem);
 
   /*
@@ -116,7 +113,7 @@ void pq_insert(struct pq* pq, void* item, int priority) {
    */
 
     while(has_parent(pq, insertion_index)){
-      int parent = dynarray_get(pq->heap, insertion_index/2);
+      struct pq_elem* parent = dynarray_get(pq->heap, insertion_index/2);
       if(priority<parent->priority){
         dynarray_set(pq->heap, insertion_index/2, new_elem);
         dynarray_set(pq->heap, insertion_index, parent);
@@ -128,12 +125,14 @@ void pq_insert(struct pq* pq, void* item, int priority) {
 }
 
 int has_parent(struct pq* pq, int index){
-  if(index == 1){
+  if(index == 0){
     return 0;
   }
-  if(dynarray_get(pq->heap, index/2)){
+  if(dynarray_get(pq->heap, index/2) != NULL){
+    printf("index: %d\n", index );
     return 1;
   }
+  return 0;
 }
 
 
@@ -203,6 +202,8 @@ void* pq_remove_first(struct pq* pq) {
    * to write a helper function to accomplish this percolation down.
    */
 
+   perc_down(pq, 1);
+
   /*
    * Return the extracted item, if the element taken out of the priority
    * queue is not NULL.
@@ -212,4 +213,30 @@ void* pq_remove_first(struct pq* pq) {
   } else {
     return NULL;
   }
+}
+
+void perc_down(struct pq* pq, int index){
+  struct pq_elem* current = dynarray_get(pq->heap, index);
+
+  if(dynarray_get(pq->heap, 2*index) != NULL){
+
+    struct pq_elem* left = dynarray_get(pq->heap, 2*index);
+
+    if(current->priority>left->priority){
+      dynarray_set(pq->heap, index, left);
+      dynarray_set(pq->heap, index*2, current);
+      perc_down(pq, index*2);
+    }
+  }
+
+  else if(dynarray_get(pq->heap, 2*index+1) != NULL){
+    struct pq_elem* right = dynarray_get(pq->heap, 2*index+1);
+
+    if(current->priority>right->priority){
+      dynarray_set(pq->heap, index, right);
+      dynarray_set(pq->heap, index*2+1, current);
+      perc_down(pq, index*2+1);
+    }
+  }
+  return;
 }
